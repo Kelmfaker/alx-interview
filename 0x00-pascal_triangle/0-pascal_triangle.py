@@ -1,4 +1,6 @@
-def pascal_triangle(n):
+from typing import List
+
+def pascal_triangle(n: int) -> List[List[int]]:
     if n <= 0:
         return []
 
