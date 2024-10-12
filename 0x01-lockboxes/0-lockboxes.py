@@ -7,6 +7,7 @@ function determine if all boxs can be opened
 
 from typing import List
 
+
 def canUnlockAll(boxes: List[List[int]]) -> bool:
     """
     return
