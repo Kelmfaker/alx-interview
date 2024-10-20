@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+"""
+this function returns the result after minimum operations
+"""
+
 
 def minOperations(n):
     if n <= 1:
