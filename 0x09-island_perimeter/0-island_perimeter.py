@@ -1,25 +1,43 @@
 #!/usr/bin/python3
-"""
-def  returns the perimeter of the island described in grid
+"""Island perimeter coding challenge
 """
 
 
 def island_perimeter(grid):
+    """Determine the perimeter of an island made up of square pieces of land
+    Only one island; no lakes; if data is invalid, return 0.
+    """
+    # Check for edge cases:
+    try:
+        assert grid and type(grid) == list
+        for row in grid:
+            assert type(row) == list
+            for cell in row:
+                assert cell == 0 or cell == 1
+    except Exception:
+        #  raise
+        return 0
+
+    # Establish grid dimensions
     rows = len(grid)
     cols = len(grid[0])
-    perimeter = 0
 
-    for r in range(rows):
-        for c in range(cols):
-            if grid[r][c] == 1:
-                # check sides
-                if r == 0 or grid[r-1][c] == 0:  # top side
-                    perimeter += 1
-                if r == rows-1 or grid[r+1][c] == 0:  # bottom side
-                    perimeter += 1
-                if c == 0 or grid[r][c-1] == 0:  # left side
-                    perimeter += 1
-                if c == cols-1 or grid[r][c+1] == 0:  # right side
-                    perimeter += 1
+    # Initialize the perimeter
+    result = 0
 
-    return perimeter
+    for i in range(rows):
+        for j in range(cols):
+            if grid[i][j] == 1:
+                # Inspect the 4 sides
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    i2, j2 = i + dx, j + dy
+                    # Check neighbour, add 1 if necessary
+                    if i2 < 0 or i2 >= rows or j2 < 0 or \
+                            j2 >= cols or grid[i2][j2] == 0:
+                        result += 1
+
+    return result
+
+
+if __name__ == "__main__":
+    pass
