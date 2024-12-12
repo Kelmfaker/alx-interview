@@ -1,89 +1,77 @@
 #!/usr/bin/python3
-
+"""A module that performs log parsing and statistics calculations."""
 import sys
-import signal
 from collections import defaultdict
+import re
 
 
-class LogProcessor:
-    def __init__(self):
-        self.total_size = 0
-        self.status_counts = defaultdict(int)
-        self.line_count = 0
-        self.valid_status_codes = {200, 301, 400, 401, 403, 404, 405, 500}
-
-    def parse_line(self, line):
-        """Parse a single log line and extract status code and file size."""
+def search_items(line, status_codes):
+    """
+    A function that searches for items in a line and
+    updates a dictionary of status codes.
+    Parameters:
+        line (str): The line to search for items.
+        status_codes (dict): A dictionary containing
+        status codes as keys and their respective counts as values.
+    Returns:
+        int: The size of the item found in the line,
+        or 0 if no item is found.
+    """
+    valid_format = (re.match(r'^\S+ - \[.+\] "GET \S+ HTTP/1.1" \d{3} \d+$',
+                             line))
+    if valid_format:
         try:
-            # Split the line into parts
-            parts = line.split('"')
-            if len(parts) != 3:
-                return None, None
-
-            # Extract status code and file size from the last part
-            metadata = parts[2].strip().split()
-            if len(metadata) != 2:
-                return None, None
-
-            status_code = int(metadata[0])
-            file_size = int(metadata[1])
-
-            # Validate format using the first part
-            ip_date = parts[0].strip()
-            if not (ip_date.endswith(']') and '[' in ip_date):
-                return None, None
-
-            # Validate request format
-            request = parts[1].strip()
-            if not request.startswith('GET /projects/260 HTTP/1.1'):
-                return None, None
-
-            return status_code, file_size
-
+            parts = line.split()
+            if len(parts) >= 7:
+                status = int(parts[-2])
+                size = int(parts[-1])
+                if size > 0 and status > 0:
+                    status_codes[status] += 1
+                    return size
         except (ValueError, IndexError):
-            return None, None
-
-    def process_line(self, line):
-        """Process a single line of log data."""
-        status_code, file_size = self.parse_line(line)
-
-        if status_code is not None and file_size is not None:
-            if status_code in self.valid_status_codes:
-                self.status_counts[status_code] += 1
-            self.total_size += file_size
-            self.line_count += 1
-
-            if self.line_count % 10 == 0:
-                self.print_stats()
-
-    def print_stats(self):
-        """Print the current statistics."""
-        print(f"File size: {self.total_size}")
-        for code in sorted(self.valid_status_codes):
-            if self.status_counts[code] > 0:
-                print(f"{code}: {self.status_counts[code]}")
+            pass
+    return 0
 
 
-def signal_handler(signum, frame):
-    """Handle the CTRL+C signal."""
-    processor.print_stats()
-    sys.exit(0)
-
-
-# Create global processor instance for signal handler access
-processor = LogProcessor()
+def print_statistics(total_size, status_codes):
+    """
+    Prints the statistics of a file, including its total
+    size and the count of each status code.
+    Parameters:
+        total_size (int): The total size of the file.
+        status_codes (dict): A dictionary containing
+        the status codes and their corresponding counts.
+    Returns:
+        None
+    """
+    print("File size: {:d}".format(total_size))
+    for code, count in sorted(status_codes.items()):
+        if count > 0:
+            print("{}: {}".format(code, count))
 
 
 def main():
-    # Register signal handler
-    signal.signal(signal.SIGINT, signal_handler)
+    """
+    A module that performs log parsing and statistics calculations.
 
-    # Process stdin line by line
+    Functions:
+        search_items(line, status_codes)
+        print_statistics(total_size, status_codes)
+        main()
+    """
+    status_codes = defaultdict(int)
+    total_size = 0
+    i = 0
     try:
         for line in sys.stdin:
-            processor.process_line(line.strip())
+            total_size += search_items(line, status_codes)
+            if i != 0 and i % 9 == 0:
+                print_statistics(total_size, status_codes)
+            i += 1
     except KeyboardInterrupt:
-        processor.print_stats()
+        pass
+    finally:
+        print_statistics(total_size, status_codes)
         sys.exit(0)
 
 
