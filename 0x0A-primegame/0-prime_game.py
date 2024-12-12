@@ -1,40 +1,30 @@
 #!/usr/bin/python3
+"0-prime_game.py"
+
 
 def isWinner(x, nums):
-    """Determine the winner of the prime game."""
-    if not nums or x <= 0:
+    """Determines the winner of the prime game.
+    Args:
+        x (int): The number of rounds to be played.
+        nums (List[int]): A list of integers representing the numbers
+        for each round.
+    Returns:
+        str: The name of the winner ("Ben" or "Maria").
+    """
+    if x < 1 or not nums:
         return None
-
-    max_n = max(nums)
-
-    # Prime numbers
-    primes = [True] * (max_n + 1)
-    primes[0] = primes[1] = False  # 0 and 1 are not prime
-
-    for i in range(2, int(max_n ** 0.5) + 1):
-        if primes[i]:
-            for j in range(i * i, max_n + 1, i):
-                primes[j] = False
-
-    # Primes up to each number
-    prime_count = [0] * (max_n + 1)
-    for i in range(1, max_n + 1):
-        prime_count[i] = prime_count[i - 1] + (1 if primes[i] else 0)
-
-    # The game for each round
-    maria_wins = 0
-    ben_wins = 0
-
-    for n in nums:
-        if prime_count[n] % 2 == 1:
-            maria_wins += 1
-        else:
-            ben_wins += 1
-
-    # The overall winner
-    if maria_wins > ben_wins:
-        return "Maria"
-    elif ben_wins > maria_wins:
-        return "Ben"
-    else:
+    marias_wins, bens_wins = 0, 0
+    n = max(nums)
+    primes = [True for _ in range(1, n + 1, 1)]
+    primes[0] = False
+    for i in range(2, int(n**0.5) + 1):
+        if primes[i - 1]:
+            for j in range(i * i, n + 1, i):
+                primes[j - 1] = False
+    for _, n in zip(range(x), nums):
+        primes_count = len(list(filter(lambda x: x, primes[0: n])))
+        bens_wins += primes_count % 2 == 0
+        marias_wins += primes_count % 2 == 1
+    if marias_wins == bens_wins:
         return None
+    return 'Maria' if marias_wins > bens_wins else 'Ben'
